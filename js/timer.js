@@ -3,7 +3,7 @@ export function initTimer(modeManager) {
   const timerState = document.querySelector("#timer-state");
   const timerCount = document.querySelector("#timer-count");
 
-  // create controls under the timer display (Start / Pause / Reset)
+  // create controls under the timer display
   const controls = document.createElement("div");
   controls.className = "flex space-x-2 justify-center mt-3";
   controls.innerHTML = `
@@ -24,15 +24,43 @@ export function initTimer(modeManager) {
   let currentStateIndex = 0;
   let currentCycle = 1;
 
-  // seconds
-  let currentDurationSec = 0; // total seconds for current state
+  let currentDurationSec = 0;
   let timeLeft = 0;
   let timerInterval = null;
+  let stopwatchMode = false;
 
+  // --- Modal setup ---
+  const modal = document.createElement("div");
+  modal.className =
+    "fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50";
+  modal.innerHTML = `
+    <div class="bg-gray-800 p-6 rounded shadow-lg flex flex-col space-y-4">
+      <p class="text-white text-lg font-bold text-center">Time's up! Choose an action:</p>
+      <div class="flex justify-center space-x-3">
+        <button id="snooze-btn" class="px-4 py-2 bg-orange-500 text-white rounded">Snooze 10min</button>
+        <button id="stopwatch-btn" class="px-4 py-2 bg-red-500 text-white rounded">Stopwatch</button>
+        <button id="next-btn" class="px-4 py-2 bg-blue-500 text-white rounded">Next State</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const snoozeBtn = modal.querySelector("#snooze-btn");
+  const stopwatchBtn = modal.querySelector("#stopwatch-btn");
+  const nextBtn = modal.querySelector("#next-btn");
+
+  function showModal() {
+    modal.classList.remove("hidden");
+  }
+  function hideModal() {
+    modal.classList.add("hidden");
+  }
+
+  // --- Timer / UI functions ---
   function formatTime(sec) {
-    const m = String(Math.floor(sec / 60)).padStart(2, "0");
-    const s = String(Math.floor(sec % 60)).padStart(2, "0");
-    return `${m}:${s}`;
+    const m = String(Math.floor(Math.abs(sec) / 60)).padStart(2, "0");
+    const s = String(Math.floor(Math.abs(sec) % 60)).padStart(2, "0");
+    return sec < 0 ? `-${m}:${s}` : `${m}:${s}`;
   }
 
   function updateUI() {
@@ -40,7 +68,6 @@ export function initTimer(modeManager) {
     timerCount.textContent = formatTime(timeLeft);
   }
 
-  // read durations for the CURRENT state from modeManager
   function loadCurrentStateDuration() {
     const times =
       modeManager && typeof modeManager.getCurrentTimes === "function"
@@ -55,16 +82,15 @@ export function initTimer(modeManager) {
         ? times.short
         : times.long;
 
-    // convert minutes to seconds, enforce minimal 1 second so UI isn't broken
     currentDurationSec = Math.max(1, Math.round(durationMin * 60));
     timeLeft = currentDurationSec;
+    stopwatchMode = false;
   }
 
   function playSound() {
     const sel = document.querySelector("#sound-selector");
     const selected = sel ? sel.value : null;
     if (!selected) return;
-
     const audioSrc = selected.startsWith("blob:")
       ? selected
       : `./sounds/${selected}`;
@@ -77,23 +103,21 @@ export function initTimer(modeManager) {
 
   function startTimerWithSeconds(seconds) {
     clearInterval(timerInterval);
-    currentDurationSec = Math.max(1, Math.round(seconds));
-    timeLeft = currentDurationSec;
+    timeLeft = Math.round(seconds);
     updateUI();
 
     timerInterval = setInterval(() => {
-      timeLeft--;
+      timeLeft += stopwatchMode ? -1 : -1;
       updateUI();
-      if (timeLeft <= 0) {
+      if (!stopwatchMode && timeLeft <= 0) {
         clearInterval(timerInterval);
         timerInterval = null;
         playSound();
-        advanceToNextState();
+        showModal();
       }
     }, 1000);
   }
 
-  // Start the next state (advance index, load duration, start)
   function advanceToNextState() {
     currentStateIndex = (currentStateIndex + 1) % cycleStates.length;
     if (currentStateIndex === 0) currentCycle++;
@@ -101,16 +125,33 @@ export function initTimer(modeManager) {
     startTimerWithSeconds(currentDurationSec);
   }
 
-  // Public controls
-  function startOrResume() {
-    if (timerInterval) return; // already running
+  // --- Modal button events ---
+  snoozeBtn.addEventListener("click", () => {
+    hideModal();
+    startTimerWithSeconds(10 * 60);
+  });
 
+  stopwatchBtn.addEventListener("click", () => {
+    hideModal();
+    stopwatchMode = true;
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateUI();
+    }, 1000);
+  });
+
+  nextBtn.addEventListener("click", () => {
+    hideModal();
+    advanceToNextState();
+  });
+
+  // --- Public controls ---
+  function startOrResume() {
+    if (timerInterval) return;
     if (timeLeft > 0 && timeLeft < currentDurationSec) {
-      // resume from pause
       startTimerWithSeconds(timeLeft);
     } else {
-      // start fresh for current state (if timeLeft is 0 or equals full)
-      loadCurrentStateDuration(); // ensures durations updated from modeManager
+      loadCurrentStateDuration();
       startTimerWithSeconds(currentDurationSec);
     }
   }
@@ -123,23 +164,18 @@ export function initTimer(modeManager) {
   function resetTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
-    timeLeft = currentDurationSec; // reset to start of current state
+    timeLeft = currentDurationSec;
+    stopwatchMode = false;
     updateUI();
   }
 
-  // bind buttons
   document.querySelector("#start-btn").addEventListener("click", startOrResume);
   document.querySelector("#pause-btn").addEventListener("click", pauseTimer);
   document.querySelector("#reset-btn").addEventListener("click", resetTimer);
 
-  // initialize display to Cycle 1 - Pomodoro and show initial time
+  // initialize display
   loadCurrentStateDuration();
   updateUI();
 
-  // expose API if you want
-  return {
-    start: startOrResume,
-    pause: pauseTimer,
-    reset: resetTimer,
-  };
+  return { start: startOrResume, pause: pauseTimer, reset: resetTimer };
 }
