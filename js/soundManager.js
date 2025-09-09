@@ -76,3 +76,10 @@ export function initSoundManager() {
     };
   }
 }
+
+// allows other function to get value of sound
+export function getSelectedSound() {
+  const soundSelector = document.getElementById("sound-selector");
+  if (!soundSelector) return null;
+  return soundSelector.value; // could be blob: URL or file name
+}
