@@ -24,12 +24,11 @@ export function initModeManager() {
     "#toggle-random-settings"
   );
 
-  // Function to toggle settings visibility with styling
+  // Reusable toggle function that also adds card styling while visible
   function toggleSettings(settingsDiv, toggleBtn) {
     settingsDiv.classList.toggle("hidden");
 
     if (!settingsDiv.classList.contains("hidden")) {
-      // Add container styling when visible
       settingsDiv.classList.add(
         "container-bg-light",
         "border",
@@ -59,37 +58,70 @@ export function initModeManager() {
     toggleSettings(randomSettings, toggleRandomBtn)
   );
 
-  // Switch mode function
+  // Switch mode: update button colors + which container is visible
   function switchMode(mode) {
     currentMode = mode;
 
     if (mode === "classic") {
       classicBtn.classList.add("color-red");
       classicBtn.classList.remove("color-dark");
-
       randomBtn.classList.add("color-dark");
       randomBtn.classList.remove("color-red");
 
-      // Show classic container, hide random
       classicSettingsContainer.classList.remove("hidden");
       randomSettingsContainer.classList.add("hidden");
     } else {
       randomBtn.classList.add("color-red");
       randomBtn.classList.remove("color-dark");
-
       classicBtn.classList.add("color-dark");
       classicBtn.classList.remove("color-red");
 
-      // Show random container, hide classic
       randomSettingsContainer.classList.remove("hidden");
       classicSettingsContainer.classList.add("hidden");
     }
   }
 
-  // Initialize default mode
-  switchMode(currentMode);
-
-  // Event listeners for mode buttons
   classicBtn.addEventListener("click", () => switchMode("classic"));
   randomBtn.addEventListener("click", () => switchMode("random"));
+
+  // Read current values from DOM and return { pomodoro, short, long } in minutes.
+  // Uses parseFloat to allow fractional minutes (e.g. 0.1 for 6s tests).
+  function getCurrentTimes() {
+    if (currentMode === "classic") {
+      const pom =
+        parseFloat(document.querySelector("#classic-pomodoro")?.value) || 25;
+      const sh =
+        parseFloat(document.querySelector("#classic-short")?.value) || 5;
+      const lg =
+        parseFloat(document.querySelector("#classic-long")?.value) || 15;
+      return { pomodoro: pom, short: sh, long: lg };
+    } else {
+      const min =
+        parseFloat(document.querySelector("#random-pomodoro-min")?.value) || 20;
+      const max =
+        parseFloat(document.querySelector("#random-pomodoro-max")?.value) || 30;
+      // generate integer minutes between min and max
+      const pom = Math.floor(
+        Math.random() * (Math.max(max, min) - Math.min(max, min) + 1) +
+          Math.min(max, min)
+      );
+      // simple algorithm for breaks — adjust later if you want different ratios
+      const short = Math.max(0.1, Math.floor(pom * 0.2));
+      const long = Math.max(1, Math.floor(pom * 0.6));
+      return { pomodoro: pom, short, long };
+    }
+  }
+
+  function getCurrentMode() {
+    return currentMode;
+  }
+
+  // initialize UI to classic
+  switchMode(currentMode);
+
+  // Return a small API so other modules (timer) can read current settings
+  return {
+    getCurrentTimes,
+    getCurrentMode,
+  };
 }

@@ -3,9 +3,9 @@ export function initTimer(modeManager) {
   const timerState = document.querySelector("#timer-state");
   const timerCount = document.querySelector("#timer-count");
 
-  // Buttons (add these under your HTML timer div)
+  // create controls under the timer display (Start / Pause / Reset)
   const controls = document.createElement("div");
-  controls.className = "flex space-x-2 justify-center";
+  controls.className = "flex space-x-2 justify-center mt-3";
   controls.innerHTML = `
     <button id="start-btn" class="color-blue px-3 py-1 rounded">Start</button>
     <button id="pause-btn" class="color-orange px-3 py-1 rounded">Pause</button>
@@ -13,7 +13,6 @@ export function initTimer(modeManager) {
   `;
   timerCount.parentNode.appendChild(controls);
 
-  // State cycle
   const cycleStates = [
     "Pomodoro",
     "Short",
@@ -25,9 +24,9 @@ export function initTimer(modeManager) {
   let currentStateIndex = 0;
   let currentCycle = 1;
 
-  // Timer variables
+  // seconds
+  let currentDurationSec = 0; // total seconds for current state
   let timeLeft = 0;
-  let totalTime = 0;
   let timerInterval = null;
 
   function formatTime(sec) {
@@ -41,81 +40,106 @@ export function initTimer(modeManager) {
     timerCount.textContent = formatTime(timeLeft);
   }
 
-  function startTimer(duration) {
-    clearInterval(timerInterval);
-    totalTime = Math.round(duration * 60); // allow 0.1 min
-    timeLeft = totalTime;
-    updateUI();
+  // read durations for the CURRENT state from modeManager
+  function loadCurrentStateDuration() {
+    const times =
+      modeManager && typeof modeManager.getCurrentTimes === "function"
+        ? modeManager.getCurrentTimes()
+        : { pomodoro: 25, short: 5, long: 15 };
 
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      updateUI();
-
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        playSound();
-        nextState();
-      }
-    }, 1000);
-  }
-
-  function playSound() {
-    const audio = new Audio("./sounds/alert.mp3"); // add file in your sounds folder
-    audio.play();
-  }
-
-  function nextState() {
-    const times = modeManager.getCurrentTimes();
     const state = cycleStates[currentStateIndex];
-
-    let duration =
+    const durationMin =
       state === "Pomodoro"
         ? times.pomodoro
         : state === "Short"
         ? times.short
         : times.long;
 
-    // Reset cycle index after 6 states
-    if (currentStateIndex === cycleStates.length - 1) {
-      currentCycle++;
-    }
-    currentStateIndex = (currentStateIndex + 1) % cycleStates.length;
+    // convert minutes to seconds, enforce minimal 1 second so UI isn't broken
+    currentDurationSec = Math.max(1, Math.round(durationMin * 60));
+    timeLeft = currentDurationSec;
+  }
 
-    startTimer(duration);
+  function playSound() {
+    const sel = document.querySelector("#sound-selector");
+    const selected = sel ? sel.value : null;
+    if (!selected) return;
+
+    const audioSrc = selected.startsWith("blob:")
+      ? selected
+      : `./sounds/${selected}`;
+    try {
+      new Audio(audioSrc).play();
+    } catch (e) {
+      console.warn("Unable to play audio:", e);
+    }
+  }
+
+  function startTimerWithSeconds(seconds) {
+    clearInterval(timerInterval);
+    currentDurationSec = Math.max(1, Math.round(seconds));
+    timeLeft = currentDurationSec;
+    updateUI();
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateUI();
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        playSound();
+        advanceToNextState();
+      }
+    }, 1000);
+  }
+
+  // Start the next state (advance index, load duration, start)
+  function advanceToNextState() {
+    currentStateIndex = (currentStateIndex + 1) % cycleStates.length;
+    if (currentStateIndex === 0) currentCycle++;
+    loadCurrentStateDuration();
+    startTimerWithSeconds(currentDurationSec);
+  }
+
+  // Public controls
+  function startOrResume() {
+    if (timerInterval) return; // already running
+
+    if (timeLeft > 0 && timeLeft < currentDurationSec) {
+      // resume from pause
+      startTimerWithSeconds(timeLeft);
+    } else {
+      // start fresh for current state (if timeLeft is 0 or equals full)
+      loadCurrentStateDuration(); // ensures durations updated from modeManager
+      startTimerWithSeconds(currentDurationSec);
+    }
   }
 
   function pauseTimer() {
     clearInterval(timerInterval);
+    timerInterval = null;
   }
 
   function resetTimer() {
     clearInterval(timerInterval);
-    timeLeft = totalTime;
+    timerInterval = null;
+    timeLeft = currentDurationSec; // reset to start of current state
     updateUI();
   }
 
-  // Button bindings
-  document.querySelector("#start-btn").addEventListener("click", () => {
-    if (!timerInterval) {
-      // if paused/resumed, continue; otherwise start new
-      if (timeLeft > 0 && timeLeft < totalTime) {
-        timerInterval = setInterval(() => {
-          timeLeft--;
-          updateUI();
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            playSound();
-            nextState();
-          }
-        }, 1000);
-      } else {
-        nextState(); // new cycle
-      }
-    }
-  });
-
+  // bind buttons
+  document.querySelector("#start-btn").addEventListener("click", startOrResume);
   document.querySelector("#pause-btn").addEventListener("click", pauseTimer);
   document.querySelector("#reset-btn").addEventListener("click", resetTimer);
 
-  return { startTimer: nextState, pauseTimer, resetTimer };
+  // initialize display to Cycle 1 - Pomodoro and show initial time
+  loadCurrentStateDuration();
+  updateUI();
+
+  // expose API if you want
+  return {
+    start: startOrResume,
+    pause: pauseTimer,
+    reset: resetTimer,
+  };
 }
