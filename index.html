@@ -4,42 +4,327 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Randoro: Turn work into a game of chance!</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      /* Balatro theme colors */
+      .color-red {
+        background-color: #fd5f55;
+        color: #ffffff;
+        border: none;
+      }
+      .color-orange {
+        background-color: #fda200;
+        color: #ffffff;
+        border: none;
+      }
+      .color-blue {
+        background-color: #009cfd;
+        color: #ffffff;
+        border: none;
+      }
+      .color-dark {
+        background-color: #4f6367;
+        color: #ffffff;
+        border: none;
+      }
+      .color-white {
+        background-color: #ffffff;
+        color: #4f6367;
+        border: none;
+      }
+
+      .container-bg {
+        background: linear-gradient(145deg, #4f6367, #009cfd, #fd5f55);
+        color: #ffffff;
+      }
+      .container-bg-light {
+        background: rgba(79, 99, 103, 0.8);
+        color: #ffffff;
+      }
+    </style>
   </head>
-  <body>
-    <div class="general-setting">
-      <div class="sounds">
-        <select id="sound-selector">
-          <option value="african-tabla.mp3">African Tabla</option>
-          <option value="car-horn.mp3">Car Horn</option>
-          <option value="funny-alarm.mp3">Funny Alarm</option>
-          <option value="level-up-07.mp3">Level Up 07</option>
-        </select>
 
-        <button id="test-sound">Test</button>
+  <body class="min-h-screen flex flex-col items-center p-6 font-sans">
+    <!-- Canvas Starfield -->
+    <canvas
+      id="starfield"
+      class="fixed top-0 left-0 w-full h-full -z-10"
+    ></canvas>
+
+    <!-- Main container -->
+    <div class="w-full max-w-lg space-y-2">
+      <div
+        class="pomodoro flex flex-col space-y-4 p-4 rounded bg-gray-700 w-full max-w-lg mx-auto"
+      >
+        <!-- Mode Buttons -->
+        <div class="pomodoro-modes flex space-x-2">
+          <button
+            id="classic-btn"
+            class="flex-1 color-red py-4 rounded hover:opacity-90"
+          >
+            Classic Mode
+          </button>
+          <button
+            id="random-btn"
+            class="flex-1 color-dark py-4 rounded hover:opacity-90"
+          >
+            Random Mode
+          </button>
+        </div>
+
+        <!-- Dynamic container -->
+        <div id="mode-container" class="rounded w-full">
+          <!-- Classic Settings -->
+          <div id="classic-settings-container">
+            <button
+              id="toggle-classic-settings"
+              class="color-blue px-2 py-1 rounded w-full"
+            >
+              Show Settings
+            </button>
+            <div
+              id="classic-settings"
+              class="hidden flex flex-col space-y-2 mt-2"
+            >
+              <label class="text-white font-medium"
+                >Pomodoro Time (minutes)
+                <input
+                  id="classic-pomodoro"
+                  type="number"
+                  min="1"
+                  value="25"
+                  class="w-full px-2 py-1 rounded color-orange text-white-800"
+                />
+              </label>
+              <label class="text-white font-medium"
+                >Short Break (minutes)
+                <input
+                  id="classic-short"
+                  type="number"
+                  min="1"
+                  value="5"
+                  class="w-full px-2 py-1 rounded color-orange text-white-800"
+                />
+              </label>
+              <label class="text-white font-medium"
+                >Long Break (minutes)
+                <input
+                  id="classic-long"
+                  type="number"
+                  min="1"
+                  value="15"
+                  class="w-full px-2 py-1 rounded color-orange text-white-800"
+                />
+              </label>
+            </div>
+          </div>
+
+          <!-- Random Settings -->
+          <div id="random-settings-container" class="hidden">
+            <button
+              id="toggle-random-settings"
+              class="color-blue px-2 py-1 rounded w-full"
+            >
+              Show Settings
+            </button>
+            <div
+              id="random-settings"
+              class="hidden flex flex-col space-y-2 mt-2"
+            >
+              <label class="text-white font-medium"
+                >Pomodoro Min (minutes)
+                <input
+                  id="random-pomodoro-min"
+                  type="number"
+                  min="1"
+                  value="20"
+                  class="w-full px-2 py-1 rounded color-orange text-white-800"
+                />
+              </label>
+              <label class="text-white font-medium"
+                >Pomodoro Max (minutes)
+                <input
+                  id="random-pomodoro-max"
+                  type="number"
+                  min="1"
+                  value="30"
+                  class="w-full px-2 py-1 rounded color-orange text-white-800"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer -->
+        <div
+          class="timer p-4 container-bg-light border rounded shadow space-y-2"
+        >
+          <p
+            id="timer-state"
+            class="text-lg font-semibold color-white p-1 rounded"
+          >
+            State: Pomodoro
+          </p>
+          <p
+            id="timer-count"
+            class="text-3xl font-bold color-blue p-1 rounded text-center"
+          >
+            25:00
+          </p>
+        </div>
       </div>
 
-      <div class="pomodoro-modes">
-        <button>Classic Mode</button>
-        <button>Random Mode</button>
+      <!-- Task List -->
+      <div
+        class="todo flex flex-col space-y-2 p-4 rounded bg-gray-700 w-full max-w-lg mx-auto"
+      >
+        <div class="todo-modes flex space-x-2 mb-2">
+          <button
+            id="pomodoro-tasks-btn"
+            class="flex-1 color-dark py-1 rounded hover:opacity-90"
+          >
+            Pomodoro Tasks
+          </button>
+          <button
+            id="day-list-btn"
+            class="flex-1 color-dark py-1 rounded hover:opacity-90"
+          >
+            Day List
+          </button>
+        </div>
+        <ul id="task-list" class="space-y-1">
+          <li>
+            <input
+              type="text"
+              maxlength="50"
+              class="w-full border rounded px-2 py-1"
+              placeholder="Task 1"
+            />
+          </li>
+          <li>
+            <input
+              type="text"
+              maxlength="50"
+              class="w-full border rounded px-2 py-1"
+              placeholder="Task 2"
+            />
+          </li>
+          <li>
+            <input
+              type="text"
+              maxlength="50"
+              class="w-full border rounded px-2 py-1"
+              placeholder="Task 3"
+            />
+          </li>
+        </ul>
+      </div>
+
+      <!-- Notification Sound Section -->
+      <div
+        class="sounds flex flex-col space-y-2 p-4 rounded bg-gray-700 w-full max-w-lg mx-auto"
+      >
+        <span
+          class="text-white font-medium text-center w-full block text-lg -mb-3"
+          >Notification Sound</span
+        >
+        <p class="text-xs text-gray-400 text-center">
+          Sound will loop until next state or stop.
+        </p>
+        <div class="border-b border-gray-500 w-full"></div>
+        <div class="flex justify-between space-x-2">
+          <select
+            id="sound-selector"
+            class="color-orange rounded px-2 py-1 text-white-800 w-4/5"
+          >
+            <option value="african-tabla.mp3">African Tabla</option>
+            <option value="car-horn.mp3">Car Horn</option>
+            <option value="funny-alarm.mp3">Funny Alarm</option>
+            <option value="level-up-07.mp3">Level Up 07</option>
+          </select>
+          <button
+            id="test-sound"
+            class="color-blue px-3 py-1 rounded hover:opacity-80 w-1/5"
+          >
+            Play
+          </button>
+        </div>
+        <input
+          type="file"
+          id="upload-sound"
+          accept="audio/*"
+          class="border rounded px-2 py-1 text-white bg-gray-600"
+        />
+        <p class="text-xs text-gray-400">
+          Uploaded sounds are saved in your browser. Clearing cache will remove
+          them.
+        </p>
       </div>
     </div>
 
-    <div class="settings">
-      <p>Settings would defer depending on which mode is selected</p>
-    </div>
+    <!-- Starfield Script -->
+    <script>
+      const canvas = document.getElementById("starfield");
+      const ctx = canvas.getContext("2d");
+      const stars = [];
+      const STAR_COUNT = 500;
 
-    <div class="timer">
-      <p>State(Pomodoro Or Short Break Or Long Break)</p>
-      <p>Timer will be here</p>
-    </div>
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
 
-    <div class="todo">
-      <div class="todo-modes">
-        <button>Pomodoro Tasks</button>
-        <button>Day List</button>
-      </div>
-    </div>
+      function initStars() {
+        stars.length = 0;
+        for (let i = 0; i < STAR_COUNT; i++) {
+          stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 2 + 1,
+            alpha: Math.random() * 0.8 + 0.2,
+            twinkle: Math.random() * 0.05,
+          });
+        }
+      }
 
-    <script src="./js/script.js"></script>
+      function drawStars() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, "#001f3f");
+        gradient.addColorStop(1, "#003366");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw each star
+        for (let star of stars) {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${star.alpha})`;
+          ctx.fill();
+
+          // twinkle effect
+          star.alpha += star.twinkle;
+          if (star.alpha > 1 || star.alpha < 0.2) star.twinkle *= -1;
+        }
+
+        requestAnimationFrame(drawStars);
+      }
+
+      function startStarfield() {
+        resizeCanvas();
+        initStars();
+        drawStars();
+      }
+
+      window.addEventListener("resize", startStarfield);
+      startStarfield();
+    </script>
+
+    <script type="module" src="./js/main.js"></script>
   </body>
 </html>

@@ -9,15 +9,17 @@ Randoro is a simple, privacy-first **Pomodoro web app**.
 - **Normal Mode**: classic 25/5 cycle with long breaks.
 - **Random Mode**: work + break times chosen from ranges, for variety.
 - **Task list**: up to 3 focus tasks with notes.
-- **Custom alarm**: upload your own sound (saved locally, never uploaded).
+- **Custom alarm**: upload your own sound (saved locally in browser).
 - **Reset option**: clear current session, timer, and tasks.
 - Works offline and can be **installed as a PWA** (like a native app).
 
 ## 🛠 Tech Stack
 
 - **Frontend**: HTML, CSS (Tailwind), JavaScript (ES6)
-- **Storage**: IndexedDB (session + alarm), localStorage (settings)
-  - **Persistent across page reloads**
+- **Storage**: IndexedDB (session + uploaded sounds + alarm), localStorage (settings, tasks)
+  - **Persistent across page reloads & browser restarts**
+  - Uploaded sounds are stored locally in IndexedDB
+  - Clearing site data/cache will remove uploaded sounds
   - Supported on **Chrome, Firefox, Brave, Safari** (modern browsers)
 - **PWA**: manifest.json + service-worker.js
 - **Hosting**: GitHub Pages or Azure Blob (static site)
@@ -60,14 +62,22 @@ Randoro is a simple, privacy-first **Pomodoro web app**.
 - Default: `https://teshwar.github.io/randoro/`
 - Custom: `https://randoro.teshwar.com`
 
-## Sounds
+## 🎵 Sounds
 
-All sounds were obtained from pixabay, found the playlist here: https://pixabay.com/playlists/sounds-for-randoro-29953768/
+All built-in sounds were obtained from Pixabay:  
+https://pixabay.com/playlists/sounds-for-randoro-29953768/
 
 - Level Up 07: Universfiled from Pixabay
 - Car horn: Ennismore from Pixabay
 - African tabla: Ribhav Agrawal from Pixabay
 - Funny Alarm: Abrar Ahmad from Pixabay
+
+### Custom Uploads
+
+- Users can upload their own notification sound.
+- Uploaded sounds are stored locally in the browser via IndexedDB.
+- They persist across reloads and browser restarts.
+- **Note**: Clearing site data/cache will remove uploaded sounds.
 
 ## 📜 License
 
