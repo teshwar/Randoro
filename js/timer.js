@@ -1,9 +1,8 @@
-// timer.js
 export function initTimer(modeManager) {
   const timerState = document.querySelector("#timer-state");
   const timerCount = document.querySelector("#timer-count");
 
-  // create controls under the timer display
+  // Controls
   const controls = document.createElement("div");
   controls.className = "flex space-x-2 justify-center mt-3";
   controls.innerHTML = `
@@ -23,13 +22,152 @@ export function initTimer(modeManager) {
   ];
   let currentStateIndex = 0;
   let currentCycle = 1;
-
   let currentDurationSec = 0;
   let timeLeft = 0;
   let timerInterval = null;
   let stopwatchMode = false;
+  let lastTimestamp = null;
 
-  // --- Modal setup ---
+  // --- Persistence ---
+  function saveState() {
+    const modeSettings = {
+      classicPom: document.querySelector("#classic-pomodoro")?.value,
+      classicShort: document.querySelector("#classic-short")?.value,
+      classicLong: document.querySelector("#classic-long")?.value,
+      randomMin: document.querySelector("#random-pomodoro-min")?.value,
+      randomMax: document.querySelector("#random-pomodoro-max")?.value,
+      currentMode: modeManager?.getCurrentMode?.() || "classic",
+    };
+    const timerStateData = {
+      currentCycle,
+      currentStateIndex,
+      timeLeft,
+      stopwatchMode,
+      lastTimestamp: timerInterval ? Date.now() : null,
+    };
+    localStorage.setItem("randoro-mode", JSON.stringify(modeSettings));
+    localStorage.setItem("randoro-timer", JSON.stringify(timerStateData));
+  }
+
+  function loadState() {
+    const savedMode = JSON.parse(localStorage.getItem("randoro-mode"));
+    const savedTimer = JSON.parse(localStorage.getItem("randoro-timer"));
+
+    if (savedMode) {
+      if (savedMode.classicPom)
+        document.querySelector("#classic-pomodoro").value =
+          savedMode.classicPom;
+      if (savedMode.classicShort)
+        document.querySelector("#classic-short").value = savedMode.classicShort;
+      if (savedMode.classicLong)
+        document.querySelector("#classic-long").value = savedMode.classicLong;
+      if (savedMode.randomMin)
+        document.querySelector("#random-pomodoro-min").value =
+          savedMode.randomMin;
+      if (savedMode.randomMax)
+        document.querySelector("#random-pomodoro-max").value =
+          savedMode.randomMax;
+      modeManager?.getCurrentMode?.() === savedMode.currentMode &&
+        modeManager?.getCurrentMode();
+    }
+
+    if (savedTimer) {
+      currentCycle = savedTimer.currentCycle || 1;
+      currentStateIndex = savedTimer.currentStateIndex || 0;
+      timeLeft = savedTimer.timeLeft || 0;
+      stopwatchMode = savedTimer.stopwatchMode || false;
+      lastTimestamp = savedTimer.lastTimestamp || null;
+
+      loadCurrentStateDuration();
+
+      if (lastTimestamp) {
+        const elapsed = Math.floor((Date.now() - lastTimestamp) / 1000);
+        timeLeft -= elapsed;
+        if (timeLeft <= 0) advanceToNextState();
+        else startTimerWithSeconds(timeLeft);
+      }
+    }
+  }
+
+  // --- Timer functions ---
+  function formatTime(sec) {
+    const m = String(Math.floor(Math.abs(sec) / 60)).padStart(2, "0");
+    const s = String(Math.floor(Math.abs(sec) % 60)).padStart(2, "0");
+    return sec < 0 ? `-${m}:${s}` : `${m}:${s}`;
+  }
+
+  function updateUI() {
+    const state = cycleStates[currentStateIndex];
+    timerState.textContent = `Cycle ${currentCycle} - State: ${state} (${
+      currentStateIndex + 1
+    })`;
+    timerCount.textContent = formatTime(timeLeft);
+
+    timerCount.classList.remove("color-red", "color-blue", "color-green");
+    timerCount.classList.add(
+      state === "Pomodoro"
+        ? "color-red"
+        : state === "Long"
+        ? "color-green"
+        : "color-blue"
+    );
+
+    saveState();
+  }
+
+  function loadCurrentStateDuration() {
+    const times = modeManager?.getCurrentTimes?.() || {
+      pomodoro: 25,
+      short: 5,
+      long: 15,
+    };
+    const state = cycleStates[currentStateIndex];
+    const durationMin =
+      state === "Pomodoro"
+        ? times.pomodoro
+        : state === "Short"
+        ? times.short
+        : times.long;
+    currentDurationSec = Math.max(1, Math.round(durationMin * 60));
+    if (!timeLeft) timeLeft = currentDurationSec;
+  }
+
+  function startTimerWithSeconds(seconds) {
+    clearInterval(timerInterval);
+    timeLeft = Math.round(seconds);
+    lastTimestamp = Date.now();
+    updateUI();
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateUI();
+      if (!stopwatchMode && timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        playSound();
+        showModal();
+      }
+    }, 1000);
+  }
+
+  function advanceToNextState() {
+    currentStateIndex = (currentStateIndex + 1) % cycleStates.length;
+    if (currentStateIndex === 0) currentCycle++;
+    loadCurrentStateDuration();
+    startTimerWithSeconds(currentDurationSec);
+  }
+
+  function playSound() {
+    const sel = document.querySelector("#sound-selector");
+    const selected = sel?.value;
+    if (!selected) return;
+    const audioSrc = selected.startsWith("blob:")
+      ? selected
+      : `./sounds/${selected}`;
+    new Audio(audioSrc).play().catch(() => {});
+  }
+
+  // --- Modal ---
   const modal = document.createElement("div");
   modal.className =
     "fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50";
@@ -49,6 +187,20 @@ export function initTimer(modeManager) {
   const stopwatchBtn = modal.querySelector("#stopwatch-btn");
   const nextBtn = modal.querySelector("#next-btn");
 
+  snoozeBtn.addEventListener("click", () => {
+    hideModal();
+    startTimerWithSeconds(10 * 60);
+  });
+  stopwatchBtn.addEventListener("click", () => {
+    hideModal();
+    stopwatchMode = true;
+    startTimerWithSeconds(timeLeft);
+  });
+  nextBtn.addEventListener("click", () => {
+    hideModal();
+    advanceToNextState();
+  });
+
   function showModal() {
     modal.classList.remove("hidden");
   }
@@ -56,116 +208,23 @@ export function initTimer(modeManager) {
     modal.classList.add("hidden");
   }
 
-  // --- Timer / UI functions ---
-  function formatTime(sec) {
-    const m = String(Math.floor(Math.abs(sec) / 60)).padStart(2, "0");
-    const s = String(Math.floor(Math.abs(sec) % 60)).padStart(2, "0");
-    return sec < 0 ? `-${m}:${s}` : `${m}:${s}`;
-  }
-
-  function updateUI() {
-    timerState.textContent = `Cycle ${currentCycle} - State: ${cycleStates[currentStateIndex]}`;
-    timerCount.textContent = formatTime(timeLeft);
-  }
-
-  function loadCurrentStateDuration() {
-    const times =
-      modeManager && typeof modeManager.getCurrentTimes === "function"
-        ? modeManager.getCurrentTimes()
-        : { pomodoro: 25, short: 5, long: 15 };
-
-    const state = cycleStates[currentStateIndex];
-    const durationMin =
-      state === "Pomodoro"
-        ? times.pomodoro
-        : state === "Short"
-        ? times.short
-        : times.long;
-
-    currentDurationSec = Math.max(1, Math.round(durationMin * 60));
-    timeLeft = currentDurationSec;
-    stopwatchMode = false;
-  }
-
-  function playSound() {
-    const sel = document.querySelector("#sound-selector");
-    const selected = sel ? sel.value : null;
-    if (!selected) return;
-    const audioSrc = selected.startsWith("blob:")
-      ? selected
-      : `./sounds/${selected}`;
-    try {
-      new Audio(audioSrc).play();
-    } catch (e) {
-      console.warn("Unable to play audio:", e);
-    }
-  }
-
-  function startTimerWithSeconds(seconds) {
-    clearInterval(timerInterval);
-    timeLeft = Math.round(seconds);
-    updateUI();
-
-    timerInterval = setInterval(() => {
-      timeLeft += stopwatchMode ? -1 : -1;
-      updateUI();
-      if (!stopwatchMode && timeLeft <= 0) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        playSound();
-        showModal();
-      }
-    }, 1000);
-  }
-
-  function advanceToNextState() {
-    currentStateIndex = (currentStateIndex + 1) % cycleStates.length;
-    if (currentStateIndex === 0) currentCycle++;
-    loadCurrentStateDuration();
-    startTimerWithSeconds(currentDurationSec);
-  }
-
-  // --- Modal button events ---
-  snoozeBtn.addEventListener("click", () => {
-    hideModal();
-    startTimerWithSeconds(10 * 60);
-  });
-
-  stopwatchBtn.addEventListener("click", () => {
-    hideModal();
-    stopwatchMode = true;
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      updateUI();
-    }, 1000);
-  });
-
-  nextBtn.addEventListener("click", () => {
-    hideModal();
-    advanceToNextState();
-  });
-
-  // --- Public controls ---
+  // --- Controls ---
   function startOrResume() {
-    if (timerInterval) return;
-    if (timeLeft > 0 && timeLeft < currentDurationSec) {
-      startTimerWithSeconds(timeLeft);
-    } else {
-      loadCurrentStateDuration();
-      startTimerWithSeconds(currentDurationSec);
-    }
+    if (!timerInterval) startTimerWithSeconds(timeLeft || currentDurationSec);
   }
-
   function pauseTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
+    saveState();
   }
-
   function resetTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
-    timeLeft = currentDurationSec;
+    currentStateIndex = 0;
+    currentCycle = 1;
+    timeLeft = 0;
     stopwatchMode = false;
+    loadCurrentStateDuration();
     updateUI();
   }
 
@@ -173,8 +232,8 @@ export function initTimer(modeManager) {
   document.querySelector("#pause-btn").addEventListener("click", pauseTimer);
   document.querySelector("#reset-btn").addEventListener("click", resetTimer);
 
-  // initialize display
-  loadCurrentStateDuration();
+  // --- Initialize ---
+  loadState();
   updateUI();
 
   return { start: startOrResume, pause: pauseTimer, reset: resetTimer };

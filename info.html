@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Randoro: Turn work into a game of chance!</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      /* Balatro theme colors */
+      .color-red {
+        background-color: #fd5f55;
+        color: #ffffff;
+        border: none;
+      }
+      .color-orange {
+        background-color: #fda200;
+        color: #ffffff;
+        border: none;
+      }
+      .color-blue {
+        background-color: #009cfd;
+        color: #ffffff;
+        border: none;
+      }
+      .color-dark {
+        background-color: #4f6367;
+        color: #ffffff;
+        border: none;
+      }
+
+      .color-pink {
+        background-color: #d58ac0;
+        color: #ffffff;
+        border: none;
+      }
+      .color-white {
+        background-color: #ffffff;
+        color: #4f6367;
+        border: none;
+      }
+
+      .container-bg {
+        background: linear-gradient(145deg, #4f6367, #009cfd, #fd5f55);
+        color: #ffffff;
+      }
+      .container-bg-light {
+        background: rgba(79, 99, 103, 0.8);
+        color: #ffffff;
+      }
+    </style>
+  </head>
+
+  <body class="min-h-screen flex flex-col items-center p-6 font-sans">
+    <!-- Canvas Starfield -->
+    <canvas
+      id="starfield"
+      class="fixed top-0 left-0 w-full h-full -z-10"
+    ></canvas>
+
+    <!-- Main container -->
+    <div class="w-full max-w-lg space-y-2">
+      <!-- Randoro Info Section -->
+      <div class="w-full max-w-lg mt-6 mx-auto space-y-6">
+        <!-- Title -->
+        <h2
+          class="text-4xl font-extrabold text-red-500 text-center drop-shadow-lg"
+        >
+          Randoro
+        </h2>
+
+        <!-- Pomodoro Cycle -->
+        <div
+          class="p-4 bg-gray-800 bg-opacity-90 rounded-xl shadow-lg space-y-4 border-2 border-red-500"
+        >
+          <h3 class="text-2xl font-bold text-pink-400 text-center">
+            Pomodoro Cycle
+          </h3>
+          <p class="text-white text-center">
+            A full cycle consists of three Pomodoros and breaks:
+          </p>
+
+          <!-- Gamified Timeline -->
+          <div class="flex justify-center items-center flex-wrap gap-2">
+            <div
+              class="px-3 py-2 rounded-full bg-red-500 text-white font-bold text-sm shadow-md"
+            >
+              Pomodoro 1
+            </div>
+            <div
+              class="px-3 py-2 rounded-full bg-blue-500 text-white font-bold text-sm shadow-md"
+            >
+              Short Break
+            </div>
+            <div
+              class="px-3 py-2 rounded-full bg-red-500 text-white font-bold text-sm shadow-md"
+            >
+              Pomodoro 2
+            </div>
+            <div
+              class="px-3 py-2 rounded-full bg-blue-500 text-white font-bold text-sm shadow-md"
+            >
+              Short Break
+            </div>
+            <div
+              class="px-3 py-2 rounded-full bg-red-500 text-white font-bold text-sm shadow-md"
+            >
+              Pomodoro 3
+            </div>
+            <div
+              class="px-3 py-2 rounded-full bg-green-500 text-white font-bold text-sm shadow-md"
+            >
+              Long Break
+            </div>
+          </div>
+        </div>
+
+        <!-- What is Randoro -->
+        <div
+          class="p-4 bg-gray-800 bg-opacity-90 rounded-xl shadow-lg border-2 border-pink-500 space-y-2"
+        >
+          <h3 class="text-xl font-bold text-pink-400">What is Randoro?</h3>
+          <p class="text-white">
+            Randoro is a modern Pomodoro timer that gamifies your focus
+            sessions. You can choose <strong>classic mode</strong> for fixed
+            durations, or <strong>random mode</strong> for unpredictable session
+            lengths, making every focus session exciting.
+          </p>
+        </div>
+
+        <!-- Random Mode -->
+        <div
+          class="p-4 bg-gray-800 bg-opacity-90 rounded-xl shadow-lg border-2 border-blue-500 space-y-2"
+        >
+          <h3 class="text-xl font-bold text-blue-400">Random Mode</h3>
+          <p class="text-white">
+            Each Pomodoro duration is randomly generated between your chosen
+            minimum and maximum. Breaks adjust based on the Pomodoro length.
+            Avoid too small values like 0.01–0.02 minutes, which round to a few
+            seconds.
+          </p>
+        </div>
+
+        <!-- Negative Timer -->
+        <div
+          class="p-4 bg-gray-800 bg-opacity-90 rounded-xl shadow-lg border-2 border-orange-500 space-y-2"
+        >
+          <h3 class="text-xl font-bold text-orange-400">
+            Negative Timer / Stopwatch
+          </h3>
+          <p class="text-white">
+            Once a Pomodoro ends, you can continue counting down into negative
+            time to stay in the zone without interruptions. Ideal for deep focus
+            sessions.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- Starfield Script -->
+    <script>
+      const canvas = document.getElementById("starfield");
+      const ctx = canvas.getContext("2d");
+      const stars = [];
+      const STAR_COUNT = 500;
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function initStars() {
+        stars.length = 0;
+        let starCount =
+          canvas.width < 500 ? 150 : canvas.width < 800 ? 300 : 500;
+
+        for (let i = 0; i < starCount; i++) {
+          stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 2 + 1,
+            alpha: Math.random() * 0.8 + 0.2,
+            offset: Math.random() * 1000, // random phase for sine
+          });
+        }
+      }
+
+      function drawStars() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, "#001f3f");
+        gradient.addColorStop(1, "#003366");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const time = Date.now() * 0.002; // controls twinkle speed
+
+        // Draw each star
+        for (let star of stars) {
+          const alpha = star.alpha + Math.sin(time + star.offset) * 0.3; // smooth oscillation
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${Math.max(
+            0,
+            Math.min(1, alpha)
+          )})`;
+          ctx.fill();
+        }
+
+        requestAnimationFrame(drawStars);
+      }
+
+      function startStarfield() {
+        resizeCanvas();
+        initStars();
+        drawStars();
+      }
+
+      window.addEventListener("resize", startStarfield);
+      startStarfield();
+    </script>
+  </body>
+</html>

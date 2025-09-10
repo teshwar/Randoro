@@ -1,4 +1,3 @@
-// modeManager.js
 export function initModeManager() {
   // Buttons
   const classicBtn = document.querySelector("#classic-btn");
@@ -16,7 +15,10 @@ export function initModeManager() {
 
   let currentMode = "classic";
 
-  // Toggle buttons inside each container
+  // --- HISTORY --- MUST be defined BEFORE load ---
+  let pomodoroHistory = [];
+
+  // --- TOGGLE ---
   const toggleClassicBtn = classicSettingsContainer.querySelector(
     "#toggle-classic-settings"
   );
@@ -24,10 +26,8 @@ export function initModeManager() {
     "#toggle-random-settings"
   );
 
-  // Reusable toggle function that also adds card styling while visible
   function toggleSettings(settingsDiv, toggleBtn) {
     settingsDiv.classList.toggle("hidden");
-
     if (!settingsDiv.classList.contains("hidden")) {
       settingsDiv.classList.add(
         "container-bg-light",
@@ -45,7 +45,6 @@ export function initModeManager() {
         "p-2"
       );
     }
-
     toggleBtn.textContent = settingsDiv.classList.contains("hidden")
       ? "Show Settings"
       : "Hide Settings";
@@ -58,7 +57,7 @@ export function initModeManager() {
     toggleSettings(randomSettings, toggleRandomBtn)
   );
 
-  // Switch mode: update button colors + which container is visible
+  // --- SWITCH MODE ---
   function switchMode(mode) {
     currentMode = mode;
 
@@ -79,14 +78,55 @@ export function initModeManager() {
       randomSettingsContainer.classList.remove("hidden");
       classicSettingsContainer.classList.add("hidden");
     }
+
+    saveModeManager(); // save mode change
   }
 
   classicBtn.addEventListener("click", () => switchMode("classic"));
   randomBtn.addEventListener("click", () => switchMode("random"));
 
-  // Read current values from DOM and return { pomodoro, short, long } in minutes.
-  // Uses parseFloat to allow fractional minutes (e.g. 0.1 for 6s tests).
+  // --- LOCAL STORAGE ---
+  function saveModeManager() {
+    const state = {
+      currentMode,
+      pomodoroHistory,
+      classicPom: document.querySelector("#classic-pomodoro")?.value,
+      classicShort: document.querySelector("#classic-short")?.value,
+      classicLong: document.querySelector("#classic-long")?.value,
+      randomMin: document.querySelector("#random-pomodoro-min")?.value,
+      randomMax: document.querySelector("#random-pomodoro-max")?.value,
+    };
+    localStorage.setItem("randoro-mode", JSON.stringify(state));
+  }
+
+  function loadModeManager() {
+    const state = JSON.parse(localStorage.getItem("randoro-mode"));
+    if (state) {
+      currentMode = state.currentMode || "classic";
+      pomodoroHistory = state.pomodoroHistory || [];
+
+      // restore inputs
+      if (state.classicPom)
+        document.querySelector("#classic-pomodoro").value = state.classicPom;
+      if (state.classicShort)
+        document.querySelector("#classic-short").value = state.classicShort;
+      if (state.classicLong)
+        document.querySelector("#classic-long").value = state.classicLong;
+      if (state.randomMin)
+        document.querySelector("#random-pomodoro-min").value = state.randomMin;
+      if (state.randomMax)
+        document.querySelector("#random-pomodoro-max").value = state.randomMax;
+    }
+  }
+
+  // --- RANDOM HELPERS ---
+  function randomBetween(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  // --- API ---
   function getCurrentTimes() {
+    let times;
     if (currentMode === "classic") {
       const pom =
         parseFloat(document.querySelector("#classic-pomodoro")?.value) || 25;
@@ -94,34 +134,41 @@ export function initModeManager() {
         parseFloat(document.querySelector("#classic-short")?.value) || 5;
       const lg =
         parseFloat(document.querySelector("#classic-long")?.value) || 15;
-      return { pomodoro: pom, short: sh, long: lg };
+      times = { pomodoro: pom, short: sh, long: lg };
     } else {
       const min =
-        parseFloat(document.querySelector("#random-pomodoro-min")?.value) || 20;
+        parseFloat(document.querySelector("#random-pomodoro-min")?.value) ||
+        0.1;
       const max =
-        parseFloat(document.querySelector("#random-pomodoro-max")?.value) || 30;
-      // generate integer minutes between min and max
-      const pom = Math.floor(
-        Math.random() * (Math.max(max, min) - Math.min(max, min) + 1) +
-          Math.min(max, min)
-      );
-      // simple algorithm for breaks — adjust later if you want different ratios
-      const short = Math.max(0.1, Math.floor(pom * 0.2));
-      const long = Math.max(1, Math.floor(pom * 0.6));
-      return { pomodoro: pom, short, long };
+        parseFloat(document.querySelector("#random-pomodoro-max")?.value) ||
+        0.3;
+      const pom = parseFloat(randomBetween(min, max).toFixed(2));
+      pomodoroHistory.push(pom);
+      const short = Math.max(0.1, parseFloat((pom * 0.2).toFixed(2)));
+      let long = 0.1;
+      if (pomodoroHistory.length % 3 === 0) {
+        const lastThree = pomodoroHistory.slice(-3);
+        const avg = lastThree.reduce((a, b) => a + b, 0) / lastThree.length;
+        long = Math.max(0.1, parseFloat((avg * 0.6).toFixed(2)));
+      }
+      times = { pomodoro: pom, short, long };
     }
+
+    // keep history unique-ish
+    if (!pomodoroHistory.includes(times.pomodoro))
+      pomodoroHistory.push(times.pomodoro);
+
+    saveModeManager(); // save whenever times are requested
+    return times;
   }
 
   function getCurrentMode() {
     return currentMode;
   }
 
-  // initialize UI to classic
+  // --- INIT ---
+  loadModeManager();
   switchMode(currentMode);
 
-  // Return a small API so other modules (timer) can read current settings
-  return {
-    getCurrentTimes,
-    getCurrentMode,
-  };
+  return { getCurrentTimes, getCurrentMode };
 }
