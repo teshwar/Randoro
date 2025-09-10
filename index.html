@@ -191,6 +191,7 @@
 
       <!-- Task List -->
       <div
+        id="todo-container"
         class="todo flex flex-col space-y-2 p-4 rounded bg-gray-700 w-full max-w-lg mx-auto"
       >
         <div class="todo-modes flex space-x-2 mb-2">
@@ -207,32 +208,17 @@
             Day List
           </button>
         </div>
-        <ul id="task-list" class="space-y-1">
-          <li>
-            <input
-              type="text"
-              maxlength="50"
-              class="w-full border rounded px-2 py-1"
-              placeholder="Task 1"
-            />
-          </li>
-          <li>
-            <input
-              type="text"
-              maxlength="50"
-              class="w-full border rounded px-2 py-1"
-              placeholder="Task 2"
-            />
-          </li>
-          <li>
-            <input
-              type="text"
-              maxlength="50"
-              class="w-full border rounded px-2 py-1"
-              placeholder="Task 3"
-            />
-          </li>
-        </ul>
+
+        <div id="pomodoro-tasks-container">
+          <ul id="pomodoro-list" class="space-y-1"></ul>
+          <p class="text-xs text-gray-400">
+            Only max 3 per pomodoro list to allow focus.
+          </p>
+        </div>
+
+        <div id="day-tasks-container" class="hidden">
+          <ul id="day-list" class="space-y-1"></ul>
+        </div>
       </div>
 
       <!-- Notification Sound Section -->
@@ -279,7 +265,7 @@
       <div class="options flex space-x-2">
         <button
           id="reset-all-btn"
-          class="flex-1 color-red py-2rounded hover:opacity-90"
+          class="flex-1 color-red py-2 rounded hover:opacity-90"
         >
           New Game
         </button>
