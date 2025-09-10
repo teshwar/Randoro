@@ -12,6 +12,37 @@ export function initTimer(modeManager) {
   `;
   timerCount.parentNode.appendChild(controls);
 
+  // --- New Game Button ---
+  const resetAllBtn = document.querySelector("#reset-all-btn");
+  resetAllBtn.addEventListener("click", () => {
+    // Stop any running timer
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    // Reset cycle, state, and stopwatch
+    currentCycle = 1;
+    currentStateIndex = 0;
+    stopwatchMode = false;
+
+    // Reset timer durations to defaults
+    currentDurationSec = 25 * 60;
+    timeLeft = currentDurationSec;
+
+    // Reset DOM inputs for Classic mode
+    document.querySelector("#classic-pomodoro").value = 25;
+    document.querySelector("#classic-short").value = 5;
+    document.querySelector("#classic-long").value = 15;
+
+    // Reset DOM inputs for Random mode
+    document.querySelector("#random-pomodoro-min").value = 10;
+    document.querySelector("#random-pomodoro-max").value = 30;
+    localStorage.removeItem("randoro-timer");
+    localStorage.removeItem("randoro-mode");
+
+    // Update the UI
+    updateUI();
+  });
+
   const cycleStates = [
     "Pomodoro",
     "Short",
@@ -220,8 +251,6 @@ export function initTimer(modeManager) {
   function resetTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
-    currentStateIndex = 0;
-    currentCycle = 1;
     timeLeft = 0;
     stopwatchMode = false;
     loadCurrentStateDuration();
