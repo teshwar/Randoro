@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Randoro: Turn work into a game of chance!</title>
 
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN (fallback if offline build is missing) -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Local Tailwind build (overrides CDN) -->
+    <link rel="stylesheet" href="./css/tailwind.css" />
 
     <style>
       /* Balatro theme colors */

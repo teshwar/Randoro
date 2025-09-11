@@ -17,7 +17,7 @@ export function initTimer(modeManager) {
   // --- New Game Button ---
   const resetAllBtn = document.querySelector("#reset-all-btn");
   resetAllBtn.addEventListener("click", () => {
-    // Stop any running timer
+    // Stop any running timergit
     clearInterval(timerInterval);
     timerInterval = null;
 

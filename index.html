@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Randoro: Turn work into a game of chance!</title>
 
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN (fallback if offline build is missing) -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Local Tailwind build (overrides CDN) -->
+    <link rel="stylesheet" href="./css/tailwind.css" />
 
     <style>
       /* Balatro theme font*/
@@ -65,6 +68,10 @@
         color: #ffffff;
       }
     </style>
+
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#f87171" />
   </head>
 
   <body class="font-['m6x11'] min-h-screen flex flex-col items-center p-6">
@@ -76,6 +83,13 @@
 
     <!-- Main container -->
     <div class="w-full max-w-lg space-y-2">
+      <button
+        id="install-btn"
+        class="fixed top-4 right-4 px-3 py-2 bg-green-500 text-white rounded hover:opacity-90 z-50"
+      >
+        Download
+      </button>
+
       <div
         class="pomodoro flex flex-col space-y-4 p-4 rounded bg-gray-700 w-full max-w-lg mx-auto"
       >
@@ -296,67 +310,66 @@
 
     <!-- Starfield Script -->
     <script>
-      const canvas = document.getElementById("starfield");
-      const ctx = canvas.getContext("2d");
-      const stars = [];
-      const STAR_COUNT = 500;
+      document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById("starfield");
+        const ctx = canvas.getContext("2d");
+        const stars = [];
 
-      function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-
-      function initStars() {
-        stars.length = 0;
-        let starCount =
-          canvas.width < 500 ? 150 : canvas.width < 800 ? 300 : 500;
-
-        for (let i = 0; i < starCount; i++) {
-          stars.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            r: Math.random() * 2 + 1,
-            alpha: Math.random() * 0.8 + 0.2,
-            offset: Math.random() * 1000, // random phase for sine
-          });
-        }
-      }
-
-      function drawStars() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Background gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, "#001f3f");
-        gradient.addColorStop(1, "#003366");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        const time = Date.now() * 0.002; // controls twinkle speed
-
-        // Draw each star
-        for (let star of stars) {
-          const alpha = star.alpha + Math.sin(time + star.offset) * 0.3; // smooth oscillation
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255,255,255,${Math.max(
-            0,
-            Math.min(1, alpha)
-          )})`;
-          ctx.fill();
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
         }
 
-        requestAnimationFrame(drawStars);
-      }
+        function initStars() {
+          stars.length = 0;
+          const starCount =
+            canvas.width < 500 ? 150 : canvas.width < 800 ? 300 : 500;
 
-      function startStarfield() {
-        resizeCanvas();
-        initStars();
-        drawStars();
-      }
+          for (let i = 0; i < starCount; i++) {
+            stars.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+              r: Math.random() * 2 + 1,
+              alpha: Math.random() * 0.8 + 0.2,
+              offset: Math.random() * 1000,
+            });
+          }
+        }
 
-      window.addEventListener("resize", startStarfield);
-      startStarfield();
+        function drawStars() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+          gradient.addColorStop(0, "#001f3f");
+          gradient.addColorStop(1, "#003366");
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          const time = Date.now() * 0.002;
+
+          for (let star of stars) {
+            const alpha = star.alpha + Math.sin(time + star.offset) * 0.3;
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${Math.max(
+              0,
+              Math.min(1, alpha)
+            )})`;
+            ctx.fill();
+          }
+
+          requestAnimationFrame(drawStars);
+        }
+
+        function startStarfield() {
+          resizeCanvas();
+          initStars();
+          drawStars();
+        }
+
+        window.addEventListener("resize", startStarfield);
+        startStarfield();
+      });
     </script>
 
     <script type="module" src="./js/main.js"></script>
