@@ -12,6 +12,8 @@ export function initTimer(modeManager) {
   `;
   timerCount.parentNode.appendChild(controls);
 
+  let stopwatchNextBtn = null; // keep reference for dynamic button
+
   // --- New Game Button ---
   const resetAllBtn = document.querySelector("#reset-all-btn");
   resetAllBtn.addEventListener("click", () => {
@@ -58,6 +60,7 @@ export function initTimer(modeManager) {
   let timerInterval = null;
   let stopwatchMode = false;
   let lastTimestamp = null;
+  let modalAudio = null;
 
   // --- Persistence ---
   function saveState() {
@@ -192,10 +195,18 @@ export function initTimer(modeManager) {
     const sel = document.querySelector("#sound-selector");
     const selected = sel?.value;
     if (!selected) return;
+
+    if (modalAudio) {
+      modalAudio.pause();
+      modalAudio = null;
+    }
+
     const audioSrc = selected.startsWith("blob:")
       ? selected
       : `./sounds/${selected}`;
-    new Audio(audioSrc).play().catch(() => {});
+    modalAudio = new Audio(audioSrc);
+    modalAudio.loop = true; // make it loop
+    modalAudio.play().catch(() => {});
   }
 
   // --- Modal ---
@@ -226,11 +237,38 @@ export function initTimer(modeManager) {
     hideModal();
     stopwatchMode = true;
     startTimerWithSeconds(timeLeft);
+
+    // Add "Next State" button if not already there
+    if (!stopwatchNextBtn) {
+      stopwatchNextBtn = document.createElement("button");
+      stopwatchNextBtn.id = "stopwatch-next-btn";
+      stopwatchNextBtn.textContent = "Next State";
+      stopwatchNextBtn.className = "color-green px-3 py-1 rounded";
+      controls.appendChild(stopwatchNextBtn);
+
+      stopwatchNextBtn.addEventListener("click", () => {
+        stopwatchMode = false; // go back into normal cycle
+        advanceToNextState();
+        // Remove the button after advancing
+        stopwatchNextBtn.remove();
+        stopwatchNextBtn = null;
+      });
+    }
   });
   nextBtn.addEventListener("click", () => {
     hideModal();
     advanceToNextState();
   });
+
+  [snoozeBtn, stopwatchBtn, nextBtn].forEach((btn) =>
+    btn.addEventListener("click", () => {
+      if (modalAudio) {
+        modalAudio.pause();
+        modalAudio.currentTime = 0;
+        modalAudio = null;
+      }
+    })
+  );
 
   function showModal() {
     modal.classList.remove("hidden");
@@ -241,8 +279,16 @@ export function initTimer(modeManager) {
 
   // --- Controls ---
   function startOrResume() {
-    if (!timerInterval) startTimerWithSeconds(timeLeft || currentDurationSec);
+    if (!timerInterval) {
+      // If timer hasn't started yet (full time or 0), reload duration from inputs
+      if (timeLeft === 0 || timeLeft === currentDurationSec) {
+        loadCurrentStateDuration();
+        timeLeft = currentDurationSec;
+      }
+      startTimerWithSeconds(timeLeft);
+    }
   }
+
   function pauseTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
@@ -259,10 +305,20 @@ export function initTimer(modeManager) {
 
   document.querySelector("#start-btn").addEventListener("click", startOrResume);
   document.querySelector("#pause-btn").addEventListener("click", pauseTimer);
-  document.querySelector("#reset-btn").addEventListener("click", resetTimer);
+
+  document.querySelector("#reset-btn").addEventListener("click", () => {
+    resetTimer(); // your existing reset logic
+    // extra cleanup for stopwatch-next button
+    stopwatchMode = false;
+    if (stopwatchNextBtn) {
+      stopwatchNextBtn.remove();
+      stopwatchNextBtn = null;
+    }
+  });
 
   // --- Initialize ---
   loadState();
+  loadCurrentStateDuration();
   updateUI();
 
   return { start: startOrResume, pause: pauseTimer, reset: resetTimer };

@@ -72,6 +72,11 @@ https://pixabay.com/playlists/sounds-for-randoro-29953768/
 - African tabla: Ribhav Agrawal from Pixabay
 - Funny Alarm: Abrar Ahmad from Pixabay
 
+## Fonts
+
+This project uses the **m6x11 font** by [Daniel Linssen](https://managore.itch.io/m6x11),  
+which is free to use with attribution.
+
 ### Custom Uploads
 
 - Users can upload their own notification sound.

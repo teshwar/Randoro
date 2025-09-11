@@ -9,6 +9,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+      /* Balatro theme font*/
+      @font-face {
+        font-family: "m6x11";
+        src: url("./fonts/m6x11.ttf") format("truetype");
+        font-weight: normal;
+        font-style: normal;
+      }
+
       /* Balatro theme colors */
       .color-red {
         background-color: #fd5f55;
@@ -59,7 +67,7 @@
     </style>
   </head>
 
-  <body class="min-h-screen flex flex-col items-center p-6 font-sans">
+  <body class="font-['m6x11'] min-h-screen flex flex-col items-center p-6">
     <!-- Canvas Starfield -->
     <canvas
       id="starfield"
@@ -176,13 +184,13 @@
         >
           <p
             id="timer-state"
-            class="text-lg font-semibold color-pink p-1 rounded"
+            class="text-xl text-center color-pink p-1 rounded"
           >
             State: Pomodoro
           </p>
           <p
             id="timer-count"
-            class="text-3xl font-bold color-red py-20 rounded text-center text"
+            class="text-7xl color-red py-20 rounded text-center text"
           >
             25:00
           </p>
@@ -272,8 +280,16 @@
         <button
           id="info-btn"
           class="flex-1 color-blue py-2 rounded hover:opacity-90"
+          onclick="window.location.href='./info.html'"
         >
           Info
+        </button>
+
+        <button
+          id="font-btn"
+          class="flex-1 color-orange py-2 rounded hover:opacity-90"
+        >
+          Fonts
         </button>
       </div>
     </div>

@@ -131,19 +131,19 @@ export function initTaskManager() {
   pomodoroFullModal.className =
     "fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50";
   pomodoroFullModal.innerHTML = `
-    <div class="bg-gray-800 p-6 rounded shadow-lg flex flex-col space-y-4 w-80">
-      <p class="text-white text-lg font-bold text-center">
-        Pomodoro list is full!
-      </p>
-      <p class="text-white text-center">
-        Complete a task first to move a new one here.
-      </p>
-      <div class="flex justify-center">
-        <button id="close-pomodoro-full" class="px-4 py-2 bg-blue-500 text-white rounded hover:opacity-90">
-          OK
-        </button>
-      </div>
-    </div>
+<div class="bg-gray-800 p-6 rounded shadow-lg flex flex-col space-y-4 w-80">
+  <p class="text-white text-xl text-center border-b border-white pb-2">
+    Pomodoro list is full!
+  </p>
+  <p class="text-white text-center">
+    Complete a task first to move a new one here.
+  </p>
+  <div class="flex justify-center">
+    <button id="close-pomodoro-full" class="px-4 py-2 bg-blue-500 text-white rounded hover:opacity-90">
+      OK
+    </button>
+  </div>
+</div>
   `;
   document.body.appendChild(pomodoroFullModal);
   const closePomodoroFullBtn = pomodoroFullModal.querySelector(
@@ -208,6 +208,21 @@ export function initTaskManager() {
       savedDay.forEach((t) => dayList.appendChild(createDayTask(t.text)));
     } else initDayList();
   }
+
+  // --- New Game Button ---
+  const resetAllBtn = document.querySelector("#reset-all-btn");
+  resetAllBtn.addEventListener("click", () => {
+    // Clear Pomodoro list
+    pomodoroList.innerHTML = "";
+    initPomodoroList();
+
+    // Clear Day list
+    dayList.innerHTML = "";
+    initDayList();
+
+    // Update localStorage
+    saveTasks();
+  });
 
   [pomodoroList, dayList].forEach((ul) =>
     ul.addEventListener("input", saveTasks)
