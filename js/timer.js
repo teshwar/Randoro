@@ -1,4 +1,13 @@
 export function initTimer(modeManager) {
+  // Service Worker to play sounds
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data?.type === "PLAY_SOUND") {
+        playSound(event.data.sound);
+      }
+    });
+  }
+
   const timerState = document.querySelector("#timer-state");
   const timerCount = document.querySelector("#timer-count");
 
@@ -6,9 +15,9 @@ export function initTimer(modeManager) {
   const controls = document.createElement("div");
   controls.className = "flex space-x-2 justify-center mt-3";
   controls.innerHTML = `
-    <button id="start-btn" class="color-blue px-3 py-1 rounded">Start</button>
-    <button id="pause-btn" class="color-orange px-3 py-1 rounded">Pause</button>
-    <button id="reset-btn" class="color-red px-3 py-1 rounded">Reset</button>
+    <button id="start-btn" class="color-blue hover:opacity-90 px-3 py-1 rounded">Start</button>
+    <button id="pause-btn" class="color-orange hover:opacity-90 px-3 py-1 rounded">Pause</button>
+    <button id="reset-btn" class="color-red hover:opacity-90 px-3 py-1 rounded">Reset</button>
   `;
   timerCount.parentNode.appendChild(controls);
 
@@ -167,21 +176,56 @@ export function initTimer(modeManager) {
   }
 
   function startTimerWithSeconds(seconds) {
+    // Stop any existing interval
     clearInterval(timerInterval);
+
+    // Initialize timeLeft and timestamp
     timeLeft = Math.round(seconds);
     lastTimestamp = Date.now();
+
+    // For countdown (Classic / Random), compute the target end time
+    let targetEnd = stopwatchMode ? null : Date.now() + timeLeft * 1000;
+
+    // Initial UI update
     updateUI();
 
+    // Main interval: updates every 200ms for smoother display
     timerInterval = setInterval(() => {
-      timeLeft--;
+      const now = Date.now();
+
+      if (stopwatchMode) {
+        // --- Stopwatch Mode ---
+        // Counts UP from the start time + any initial seconds offset
+        timeLeft = Math.round((now - lastTimestamp) / 1000) + (seconds || 0);
+      } else {
+        // --- Countdown Mode (Classic / Random) ---
+        timeLeft = Math.round((targetEnd - now) / 1000);
+      }
+
+      // Update the timer display and colors
       updateUI();
+
+      // Only trigger modal/sound for countdown timers
       if (!stopwatchMode && timeLeft <= 0) {
         clearInterval(timerInterval);
         timerInterval = null;
-        playSound();
+
+        const selectedSound = document.querySelector("#sound-selector")?.value;
+
+        // Send notification via service worker if available
+        if (navigator.serviceWorker.controller && "Notification" in window) {
+          navigator.serviceWorker.controller.postMessage({
+            type: "TIMER_FINISHED",
+            sound: selectedSound,
+          });
+        }
+
+        // Always play sound locally
+        playSound(selectedSound);
+
         showModal();
       }
-    }, 1000);
+    }, 200); // update every 0.2s for smoothness
   }
 
   function advanceToNextState() {
@@ -191,9 +235,8 @@ export function initTimer(modeManager) {
     startTimerWithSeconds(currentDurationSec);
   }
 
-  function playSound() {
-    const sel = document.querySelector("#sound-selector");
-    const selected = sel?.value;
+  function playSound(sound) {
+    const selected = sound || document.querySelector("#sound-selector")?.value;
     if (!selected) return;
 
     if (modalAudio) {
@@ -205,7 +248,7 @@ export function initTimer(modeManager) {
       ? selected
       : `./sounds/${selected}`;
     modalAudio = new Audio(audioSrc);
-    modalAudio.loop = true; // make it loop
+    modalAudio.loop = true; // loop if desired
     modalAudio.play().catch(() => {});
   }
 
@@ -243,7 +286,8 @@ export function initTimer(modeManager) {
       stopwatchNextBtn = document.createElement("button");
       stopwatchNextBtn.id = "stopwatch-next-btn";
       stopwatchNextBtn.textContent = "Next State";
-      stopwatchNextBtn.className = "color-green px-3 py-1 rounded";
+      stopwatchNextBtn.className =
+        "color-green hover:opacity-90 px-3 py-1 rounded";
       controls.appendChild(stopwatchNextBtn);
 
       stopwatchNextBtn.addEventListener("click", () => {

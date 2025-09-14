@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Randoro: Turn work into a game of chance!</title>
 
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="./img/icon-192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="./img/icon-512.png"
+    />
+    <link rel="apple-touch-icon" href="./img/icon-192.png" />
+
     <!-- Tailwind CSS CDN (fallback if offline build is missing) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -69,12 +84,18 @@
       <div class="w-full max-w-lg mt-6 mx-auto space-y-6">
         <!-- Title -->
         <a href="./index.html">
-          <h2
-            class="text-4xl font-extrabold text-red-500 text-center drop-shadow-lg cursor-pointer transition-transform transform hover:scale-105 hover:text-red-600"
+          <img
+            src="./img/randoro-logo.png"
+            srcset="
+              ./img/randoro-logo.png    1x,
+              ./img/randoro-logo@2x.png 2x,
+              ./img/randoro-logo@4x.png 4x
+            "
+            alt="Randoro Logo"
+            class="mx-auto mt-4 mb-6 h-auto w-[180px] sm:w-[220px] md:w-[260px]"
+            style="image-rendering: pixelated"
             onclick="window.location.href='./index.html'"
-          >
-            Randoro
-          </h2>
+          />
         </a>
 
         <!-- Pomodoro Cycle -->
@@ -95,26 +116,36 @@
             >
               Pomodoro 1
             </div>
+
+            <div class="text-white">→</div>
+
             <div
               class="px-3 py-2 rounded-full bg-blue-500 text-white font-bold text-sm shadow-md"
             >
               Short Break
             </div>
+
+            <div class="text-white">→</div>
+
             <div
               class="px-3 py-2 rounded-full bg-red-500 text-white font-bold text-sm shadow-md"
             >
               Pomodoro 2
             </div>
+
+            <div class="text-white">→</div>
             <div
               class="px-3 py-2 rounded-full bg-blue-500 text-white font-bold text-sm shadow-md"
             >
               Short Break
             </div>
+            <div class="text-white">→</div>
             <div
               class="px-3 py-2 rounded-full bg-red-500 text-white font-bold text-sm shadow-md"
             >
               Pomodoro 3
             </div>
+            <div class="text-white">→</div>
             <div
               class="px-3 py-2 rounded-full bg-green-500 text-white font-bold text-sm shadow-md"
             >
@@ -160,6 +191,42 @@
             Once a Pomodoro ends, you can continue counting down into negative
             time to stay in the zone without interruptions. Ideal for deep focus
             sessions.
+          </p>
+        </div>
+
+        <!-- Custom Sounds -->
+        <div
+          class="p-4 bg-gray-800 bg-opacity-90 rounded-xl shadow-lg border-2 border-green-500 space-y-2"
+        >
+          <h3 class="text-xl font-bold text-green-400">Custom Sounds</h3>
+          <p class="text-white">
+            You can upload your own alarm sound in the
+            <strong>Notification Sound</strong> panel. This allows you to use
+            <em>any MP3 file</em> – from motivational speeches to funny clips.
+            Uploaded sounds are stored locally in your browser, so they’ll still
+            work even after you close and reopen Randoro.
+            <br />
+            <strong>Note:</strong> Clearing browser cache/site data will remove
+            custom sounds.
+          </p>
+        </div>
+
+        <!-- Tasks & New Game -->
+        <div
+          class="p-4 bg-gray-800 bg-opacity-90 rounded-xl shadow-lg border-2 border-yellow-500 space-y-2"
+        >
+          <h3 class="text-xl font-bold text-yellow-400">Tasks & New Game</h3>
+          <p class="text-white">
+            You can add up to <strong>3 focus(Poomdoro) tasks</strong> at a
+            time. Once completed, mark them off and free up space for the next.
+            <br />
+            You can add unlimited amount of tasks in <strong>Day List</strong>,
+            and move them to <strong> Pomodoro Tasks</strong> when there is
+            space. <br /><br />
+            If you want to start fresh, use the
+            <span class="text-red-400 font-bold">New Game</span> button. This
+            clears your tasks and cycles, sessions, but
+            <em>keeps your sound settings</em>.
           </p>
         </div>
       </div>

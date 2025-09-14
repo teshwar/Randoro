@@ -14,17 +14,17 @@ export function initTaskManager() {
     if (showPomodoro) {
       pomodoroContainer.classList.remove("hidden");
       dayContainer.classList.add("hidden");
-      pomodoroBtn.classList.add("color-red");
+      pomodoroBtn.classList.add("color-blue");
       pomodoroBtn.classList.remove("color-dark");
       dayBtn.classList.add("color-dark");
-      dayBtn.classList.remove("color-red");
+      dayBtn.classList.remove("color-blue");
     } else {
       dayContainer.classList.remove("hidden");
       pomodoroContainer.classList.add("hidden");
-      dayBtn.classList.add("color-red");
+      dayBtn.classList.add("color-blue");
       dayBtn.classList.remove("color-dark");
       pomodoroBtn.classList.add("color-dark");
-      pomodoroBtn.classList.remove("color-red");
+      pomodoroBtn.classList.remove("color-blue");
     }
   }
   pomodoroBtn.addEventListener("click", () => toggleTasks(true));
@@ -83,7 +83,7 @@ export function initTaskManager() {
     const moveBtn = document.createElement("button");
     moveBtn.textContent = "→ Pomodoro";
     moveBtn.className =
-      "px-2 py-1 bg-blue-500 rounded text-white text-sm hover:opacity-90";
+      "px-2 py-1 color-blue rounded text-white text-sm hover:opacity-90";
     moveBtn.addEventListener("click", () => {
       const emptySlot = Array.from(pomodoroList.children).find(
         (li) => li.querySelector("input[type=text]").value === ""
@@ -105,7 +105,7 @@ export function initTaskManager() {
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Delete";
     deleteBtn.className =
-      "px-2 py-1 bg-red-500 rounded text-white text-sm hover:opacity-90";
+      "px-2 py-1 color-red rounded text-white text-sm hover:opacity-90";
     deleteBtn.addEventListener("click", () => {
       li.remove();
       saveTasks();
@@ -119,7 +119,7 @@ export function initTaskManager() {
   const addDayBtn = document.createElement("button");
   addDayBtn.textContent = "+";
   addDayBtn.className =
-    "px-2 py-1 bg-blue-500 rounded text-white text-sm hover:opacity-90 mt-2 float-right";
+    "px-2 py-1 color-orange rounded text-white text-sm hover:opacity-90 mt-2 float-right";
   addDayBtn.addEventListener("click", () => {
     dayList.appendChild(createDayTask());
     saveTasks();

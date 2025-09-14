@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Randoro: Turn work into a game of chance!</title>
 
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="./img/icon-192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="./img/icon-512.png"
+    />
+    <link rel="apple-touch-icon" href="./img/icon-192.png" />
+
     <!-- Tailwind CSS CDN (fallback if offline build is missing) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -83,12 +98,17 @@
 
     <!-- Main container -->
     <div class="w-full max-w-lg space-y-2">
-      <button
-        id="install-btn"
-        class="fixed top-4 right-4 px-3 py-2 bg-green-500 text-white rounded hover:opacity-90 z-50"
-      >
-        Download
-      </button>
+      <img
+        src="./img/randoro-logo.png"
+        srcset="
+          ./img/randoro-logo.png    1x,
+          ./img/randoro-logo@2x.png 2x,
+          ./img/randoro-logo@4x.png 4x
+        "
+        alt="Randoro Logo"
+        class="mx-auto mt-4 mb-6 h-auto w-[180px] sm:w-[220px] md:w-[260px]"
+        style="image-rendering: pixelated"
+      />
 
       <div
         class="pomodoro flex flex-col space-y-4 p-4 rounded bg-gray-700 w-full max-w-lg mx-auto"
@@ -115,7 +135,7 @@
           <div id="classic-settings-container">
             <button
               id="toggle-classic-settings"
-              class="color-blue px-2 py-1 rounded w-full"
+              class="color-blue hover:opacity-90 px-2 py-1 rounded w-full"
             >
               Show Settings
             </button>
@@ -233,7 +253,7 @@
 
         <div id="pomodoro-tasks-container">
           <ul id="pomodoro-list" class="space-y-1"></ul>
-          <p class="text-xs text-gray-400">
+          <p class="text-[13px] text-gray-400 mt-2 text-center">
             Only max 3 per pomodoro list to allow focus.
           </p>
         </div>
@@ -278,7 +298,7 @@
           accept="audio/*"
           class="border rounded px-2 py-1 text-white bg-gray-600"
         />
-        <p class="text-xs text-gray-400">
+        <p class="text-[13px] text-gray-400 mt-2">
           Uploaded sounds are saved in your browser. Clearing cache will remove
           them.
         </p>
@@ -304,6 +324,13 @@
           class="flex-1 color-orange py-2 rounded hover:opacity-90"
         >
           Fonts
+        </button>
+
+        <button
+          id="install-btn"
+          class="flex-1 color-green py-2 rounded hover:opacity-90"
+        >
+          Download
         </button>
       </div>
     </div>

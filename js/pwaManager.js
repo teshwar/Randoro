@@ -1,5 +1,12 @@
 // js/pwaManager.js
 export function initPWA() {
+  //Notification Requests
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission().then((permission) => {
+      console.log("Notification permission:", permission);
+    });
+  }
+
   const installBtn = document.querySelector("#install-btn");
   installBtn.style.display = "none"; // hide until prompt is ready
 

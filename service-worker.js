@@ -76,3 +76,26 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "TIMER_FINISHED") {
+    const soundFile = event.data.sound || "level-up-07.mp3";
+
+    self.registration.showNotification("Time's up!", {
+      body: "Your Pomodoro has finished!",
+      icon: "./img/icon-192.png", // optional
+      vibrate: [200, 100, 200],
+      // NOTE: notifications themselves can't play audio in SW
+      // we will handle sound via clients (see next)
+      tag: "timer-finished",
+      renotify: true,
+    });
+
+    // Try to play sound in all clients
+    self.clients.matchAll({ type: "window" }).then((clients) => {
+      clients.forEach((client) =>
+        client.postMessage({ type: "PLAY_SOUND", sound: soundFile })
+      );
+    });
+  }
+});
