@@ -70,7 +70,7 @@ https://pixabay.com/playlists/sounds-for-randoro-29953768/
 - Level Up 07: Universfiled from Pixabay
 - Car horn: Ennismore from Pixabay
 - African tabla: Ribhav Agrawal from Pixabay
-- Funny Alarm: Abrar Ahmad from Pixabay
+- LoFi: Sound : Lesiakower from Pixabay
 
 ## Fonts
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "randoro-cache-v2";
+const CACHE_NAME = "randoro-cache-v3";
 const FILES_TO_CACHE = [
   "./",
   "/index.html",
@@ -21,7 +21,7 @@ const FILES_TO_CACHE = [
   "/fonts/m6x11plus.ttf",
   "/sounds/african-tabla.mp3",
   "/sounds/car-horn.mp3",
-  "/sounds/funny-alarm.mp3",
+  "/sounds/lofi.mp3",
   "/sounds/level-up-07.mp3",
 ];
 
