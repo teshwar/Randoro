@@ -20,7 +20,7 @@ Randoro is a simple, privacy-first **Pomodoro web app**.
 - **Random Mode**: work + break times chosen from ranges, for variety
 - **Task list**: up to 3 focus tasks with notes
 - **Custom alarm**: upload your own sound (saved locally in browser)
-- **Reset option**: clear current session, timer, and tasks
+- **New Game option**: clear current session, timer, and tasks
 - Works offline and can be **installed as a PWA** (like a native app)
 
 ---
