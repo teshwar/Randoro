@@ -323,9 +323,14 @@ export function initTimer(modeManager) {
 
   // --- Controls ---
   function startOrResume() {
+    const currentMode = modeManager?.getCurrentMode?.() || "classic";
+
     if (!timerInterval) {
       // If timer hasn't started yet (full time or 0), reload duration from inputs
-      if (timeLeft === 0 || timeLeft === currentDurationSec) {
+      if (
+        currentMode === "classic" &&
+        (timeLeft === 0 || timeLeft === currentDurationSec)
+      ) {
         loadCurrentStateDuration();
         timeLeft = currentDurationSec;
       }
