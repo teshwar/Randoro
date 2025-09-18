@@ -200,6 +200,7 @@ export function initTimer(modeManager) {
       } else {
         // --- Countdown Mode (Classic / Random) ---
         timeLeft = Math.round((targetEnd - now) / 1000);
+        if (timeLeft < 0) timeLeft = 0; // 👈 Clamp to 0
       }
 
       // Update the timer display and colors
